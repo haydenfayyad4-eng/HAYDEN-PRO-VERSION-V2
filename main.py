@@ -10,7 +10,7 @@ if pengetahuan:
 elif jawapan == "TAK_TAHU" and model:
     # baru tanya Gemini...
 
-NEWS_API_KEY = st.secrets.get("NEWS_API_KEY", "") if hasattr(st, "secrets") else ""
+NEWS_API_KEY = st.secrets.get("") if hasattr "secret"
 
 st.set_page_config(page_title="HAYDEN-PRO-VERSION V2", page_icon="🤖")
 st.title("🤖 HAYDEN-PRO-VERSION V2")
