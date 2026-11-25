@@ -1,7 +1,16 @@
 import streamlit as st
 import os
 from pekerja import bos_hayden, simpan_belajar, load_belajar
-from pengetahuan import HAYDEN_INFO, CARA_JAWAB
+from pengetahuan import cari_pengetahuan
+
+# LAPIS 1.5: PENGETAHUAN (Wikipedia + Kamus + Berita + Hukum)
+pengetahuan = cari_pengetahuan(tanya, NEWS_API_KEY)
+if pengetahuan:
+    jawapan = pengetahuan
+elif jawapan == "TAK_TAHU" and model:
+    # baru tanya Gemini...
+
+NEWS_API_KEY = st.secrets.get("NEWS_API_KEY", "") if hasattr(st, "secrets") else ""
 
 st.set_page_config(page_title="HAYDEN-PRO-VERSION V2", page_icon="🤖")
 st.title("🤖 HAYDEN-PRO-VERSION V2")
