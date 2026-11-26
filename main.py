@@ -24,7 +24,7 @@ if API_KEY:
     try:
         import google.generativeai as genai
         genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
     except Exception as e:
         model = None
         gemini_error = str(e)
@@ -63,28 +63,3 @@ if tanya:
                 jawapan = bos_hayden(tanya)
 
                 # LAPIS 2: PENGETAHUAN - Wikipedia + Kamus + Berita + Hukum Syarak
-                if jawapan == "TAK_TAHU":
-                    cari = cari_pengetahuan(tanya, NEWS_API_KEY)
-                    if cari:
-                        jawapan = cari
-
-                # LAPIS 3: GEMINI
-                if jawapan == "TAK_TAHU" and model:
-                    try:
-                        prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + "\nSoalan: " + tanya
-                        res = model.generate_content(prompt)
-                        jawapan = res.text.strip()
-                    except Exception as e:
-                        jawapan = "GEMINI ERROR: " + str(e)
-
-                # LAPIS 4: TAK TAHU
-                if jawapan == "TAK_TAHU":
-                    if not API_KEY:
-                        jawapan = "GEMINI ERROR: API KEY KOSONG - Secrets takde key"
-                    elif gemini_error:
-                        jawapan = "GEMINI ERROR SETUP: " + gemini_error
-                    else:
-                        jawapan = "Aku tak tahu lagi yang ni, Bos. Ajar aku? Taip: ajar aku | soalan | jawapan"
-
-            st.write(jawapan)
-            st.session_state.chat.append({"role": "assistant", "text": jawapan})
