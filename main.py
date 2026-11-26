@@ -207,40 +207,4 @@ if (hantar and (tanya or gambar_final)) or gambar_final:
                 jawapan = "Aku tak tahu lagi yang ni."
         st.session_state.chat.append({"role": "assistant", "text": jawapan})
         st.session_state.msg_box = ""
-        st.rerun(): "user", "text": tanya})
-    if gambar_final:
-        st.session_state.chat.append({"role": "user", "text": "📷 Gambar", "image": gambar_final})
-    with st.spinner("HAYDEN tengah fikir..."):
-        jawapan = ""
-        t_lower = (tanya or "").lower().strip()
-        if t_lower in ["check kuota", "kuota"]:
-            jawapan = "✅ Kuota masih ada" if tanya_gemini("hi") else "❌ " + gemini_error
-        elif t_lower.startswith("ajar aku"):
-            try:
-                bahagian = tanya.split("|", 3)
-                if bahagian[1].strip() == "ADAM-BOS":
-                    simpan_belajar(bahagian[2].strip(), bahagian[3].strip())
-                    jawapan = "Ok, dah simpan."
-                else:
-                    jawapan = "Eh, untuk Bos je."
-            except:
-                jawapan = "Format: ajar aku | ADAM-BOS | soalan | jawapan"
-        else:
-            jawapan = bos_hayden(soalan_final) if not gambar_final else "TAK_TAHU"
-            if jawapan == "TAK_TAHU" and client:
-                prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + "\nSoalan: " + soalan_final
-                gambar_part = None
-                if gambar_final:
-                    from google.genai import types
-                    gambar_part = types.Part.from_bytes(data=gambar_final.getvalue(), mime_type=gambar_final.type if hasattr(gambar_final, 'type') else "image/jpeg")
-                hasil = tanya_gemini(prompt, gambar_part)
-                if hasil:
-                    jawapan = hasil
-                    st.session_state.guna_gemini += 1
-                else:
-                    jawapan = "GEMINI ERROR: " + gemini_error
-            if jawapan == "TAK_TAHU":
-                jawapan = "Aku tak tahu lagi yang ni."
-        st.session_state.chat.append({"role": "assistant", "text": jawapan})
-        st.session_state.msg_box = ""
         st.rerun()
