@@ -25,79 +25,77 @@ except:
 
 client = None
 gemini_error = ""
-MODEL_PILIH = None
 MODEL_LIST_DAPAT = []
+MODEL_CUBA = []
 
 if API_KEY:
     try:
         from google import genai
         client = genai.Client(api_key=API_KEY)
-        # TANYA GOOGLE SENDIRI MODEL APA YANG ADA UNTUK KUNCI NI
         try:
             for m in client.models.list():
                 nama = m.name.replace("models/", "")
                 MODEL_LIST_DAPAT.append(nama)
-            # Cari yang ada perkataan flash dulu, sebab paling laju & free
+            # Susun: yang paling baru & paling ringan dulu, yang paling senang lulus
+            UTAMA = ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.1-flash", "gemini-2.0-flash-lite"]
+            for u in UTAMA:
+                if u in MODEL_LIST_DAPAT:
+                    MODEL_CUBA.append(u)
+            # Lepas tu tambah semua flash lain yang ada
             for n in MODEL_LIST_DAPAT:
-                if "flash" in n.lower() and "2.5" in n:
-                    MODEL_PILIH = n
-                    break
-            if not MODEL_PILIH:
-                for n in MODEL_LIST_DAPAT:
-                    if "flash" in n.lower():
-                        MODEL_PILIH = n
-                        break
-            if not MODEL_PILIH and MODEL_LIST_DAPAT:
-                MODEL_PILIH = MODEL_LIST_DAPAT[0]
+                if "flash" in n.lower() and n not in MODEL_CUBA and "image" not in n.lower() and "preview" not in n.lower():
+                    MODEL_CUBA.append(n)
         except Exception as e:
-            gemini_error = "LIST MODEL GAGAL: " + str(e)
+            gemini_error = "LIST GAGAL: " + str(e)
     except Exception as e:
         client = None
         gemini_error = str(e)
 
 def tanya_gemini(prompt):
     global gemini_error
-    if not MODEL_PILIH:
-        return None
-    try:
-        res = client.models.generate_content(model=MODEL_PILIH, contents=prompt)
-        return res.text.strip()
-    except Exception as e:
-        gemini_error = str(e)
-        return None
+    # Cuba satu-satu sampai ada yang jawab
+    for nama_model in MODEL_CUBA:
+        try:
+            res = client.models.generate_content(model=nama_model, contents=prompt)
+            if res.text:
+                st.session_state["model_jaya"] = nama_model
+                return res.text.strip()
+        except Exception as e:
+            gemini_error = f"[{nama_model}] {str(e)}"
+            continue
+    return None
 
 def check_kuota():
     if not client:
-        return "❌ API KEY TAKDE / ROSAK. Kena buat API Key baru kat aistudio.google.com/apikey"
-    if not MODEL_PILIH:
-        return "❌ GOOGLE TAK BAGI SEBARANG MODEL UNTUK KUNCI NI. Model yang ada: " + str(MODEL_LIST_DAPAT) + " | Error: " + gemini_error + " | Cuba buat API Key baru dalam project baru."
-    try:
-        res = client.models.generate_content(model=MODEL_PILIH, contents="hi")
-        return f"✅ KUOTA MASIH ADA! Model yang HAYDEN pakai sekarang: {MODEL_PILIH}. Dah guna {st.session_state.get('guna_gemini', 0)} kali sesi ni."
-    except Exception as e:
-        teks = str(e)
-        if "429" in teks or "quota" in teks.lower() or "exceeded" in teks.lower():
-            return "🛑 KUOTA DAH HABIS! Tunggu esok pagi reset."
-        if "404" in teks:
-            return f"⚠️ 404 lagi walaupun auto-detect. Model cuba: {MODEL_PILIH}. Model yang Google bagi: {MODEL_LIST_DAPAT}"
-        if "API_KEY_INVALID" in teks or "API key not valid" in teks:
-            return "❌ API KEY SALAH / DAH MATI. Buat baru, paste kat Secrets, Reboot."
-        return "❌ ERROR LAIN: " + teks
+        return "❌ API KEY TAKDE / ROSAK"
+    if not MODEL_CUBA:
+        return "❌ TAKDE MODEL FLASH. Model Google bagi: " + str(MODEL_LIST_DAPAT)
+    hasil = tanya_gemini("hi")
+    if hasil:
+        return f"✅ KUOTA MASIH ADA! Model yang berjaya: {st.session_state.get('model_jaya', '?')} | Dah guna {st.session_state.get('guna_gemini', 0)} kali"
+    teks = gemini_error
+    if "429" in teks or "quota" in teks.lower() or "exceeded" in teks.lower():
+        return "🛑 KUOTA DAH HABIS! Tunggu esok. Error: " + teks
+    return "❌ ERROR: " + teks
 
 if "chat" not in st.session_state:
     st.session_state.chat = []
 if "guna_gemini" not in st.session_state:
     st.session_state.guna_gemini = 0
+if "model_jaya" not in st.session_state:
+    st.session_state.model_jaya = "-"
 
 with st.sidebar:
     st.write("📊 **KUOTA HAYDEN**")
-    st.write(f"Model aktif: {MODEL_PILIH if MODEL_PILIH else 'TAK JUMPA'}")
-    st.write(f"Dah guna Gemini: {st.session_state.guna_gemini} kali (sesi ni)")
+    st.write(f"Model berjaya tadi: {st.session_state.model_jaya}")
+    st.write(f"Dah guna Gemini: {st.session_state.guna_gemini} kali")
     if st.button("Check Kuota Sekarang"):
         with st.spinner("Check..."):
             st.info(check_kuota())
-    with st.expander("Senarai Model Google Bagi"):
-        st.write(MODEL_LIST_DAPAT if MODEL_LIST_DAPAT else "Kosong - Google tak bagi langsung")
+    st.write("**Error Terakhir:**")
+    st.code(gemini_error if gemini_error else "Tiada error lagi", language="text")
+    with st.expander("Senarai Model Cuba"):
+        st.write(MODEL_CUBA)
 
 for m in st.session_state.chat:
     with st.chat_message(m["role"]):
@@ -112,7 +110,7 @@ if tanya:
         with st.spinner("HAYDEN tengah fikir..."):
             jawapan = ""
             t_lower = tanya.lower().strip()
-            if t_lower in ["check kuota", "kuota", "check quota", "baki kuota", "kuota habis ke"]:
+            if t_lower in ["check kuota", "kuota", "check quota", "baki kuota"]:
                 jawapan = check_kuota()
             elif t_lower.startswith("ajar aku"):
                 try:
