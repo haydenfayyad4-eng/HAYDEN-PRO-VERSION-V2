@@ -26,7 +26,8 @@ except:
 
 model = None
 gemini_error = ""
-MODEL_LIST = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+# 1.5 DAH MATI, KITA PAKAI YANG BARU JE
+MODEL_LIST = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite"]
 if API_KEY:
     try:
         import google.generativeai as genai
