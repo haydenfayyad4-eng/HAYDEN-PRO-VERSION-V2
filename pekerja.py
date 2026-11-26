@@ -30,9 +30,7 @@ def pekerja_security(tanya):
         return "PEKERJA SECURITY - Password Kuat: Buat password 12 huruf ke atas, campur huruf besar, huruf kecil, nombor dan simbol. Contoh: Seremban2026Adam. Jangan guna password sama untuk semua akaun. On kan 2FA kat Google, Instagram dan WhatsApp."
     if "phishing" in t or "scam" in t or "link tipu" in t or "kena hack" in t or "kena scam" in t:
         return "PEKERJA SECURITY - Jangan Kena Scam: Jangan klik link dari nombor tak kenal. Jangan bagi nombor OTP 6 digit kat sesiapa. Jangan login bank guna WiFi free kat kedai. Kalau dah terklik, cepat tukar password dan on 2FA."
-    if "ethical hacker" in t or "hacker baik" in t or "jadi hacker" in t or "belajar hack" in t:
-        return "PEKERJA SECURITY - Nak Jadi Ethical Hacker: Belajar asas komputer, Linux dan Python. Belajar kat tempat legal macam TryHackMe dan HackTheBox. Jangan test hack akaun orang tanpa izin. Bila dah pandai, company akan bayar kau untuk cari lubang security diorang."
-    if "bocor" in t or "leak" in t:
+    if "bocor" in t or "leak" in t or "akaun aku kena hack ke" in t:
         return "PEKERJA SECURITY - Check Akaun Bocor: Pergi kat Google, taip have i been pwned, masukkan email kau. Kalau merah, maknanya email pernah bocor. Terus tukar password email tu."
     return "TAK_TAHU"
 
@@ -42,7 +40,7 @@ def bos_hayden(tanya):
     if t in belajar:
         return belajar[t]
     if t in ["hi", "hello", "assalamualaikum", "salam", "assalamualaikum hayden"]:
-        return "Waalaikumsalam Bos Adam. HAYDEN dah ready. Ada Pekerja Security baru, kalau nak belajar jadi hacker baik, tanya je aku."
+        return "Waalaikumsalam Bos Adam. HAYDEN dah ready. Ada Pekerja Security baru, kalau nak tanya pasal password kuat atau elak kena scam, tanya je aku."
     if "siapa bos" in t or "siapa nama bos" in t or "siapa tuan kau" in t:
         return "Bos aku Adam dari Seremban. Bos paling power."
     if "siapa kau" in t or "nama kau" in t:
