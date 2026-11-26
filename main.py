@@ -12,7 +12,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("🤖 HAYDEN-PRO-VERSION V2")
-st.caption(f"Bos: Adam dari Seremban | Pekerja: {JUMLAH_PEKERJA} orang")
+st.caption(f"Adam dari Seremban | {JUMLAH_PEKERJA} pekerja dalam sistem")
 
 try:
     API_KEY = st.secrets["GEMINI_API_KEY"]
@@ -27,6 +27,7 @@ client = None
 gemini_error = ""
 MODEL_LIST_DAPAT = []
 MODEL_CUBA = []
+MODEL_GAMBAR = "gemini-2.5-flash-image"
 
 if API_KEY:
     try:
@@ -36,12 +37,10 @@ if API_KEY:
             for m in client.models.list():
                 nama = m.name.replace("models/", "")
                 MODEL_LIST_DAPAT.append(nama)
-            # Susun: yang paling baru & paling ringan dulu, yang paling senang lulus
             UTAMA = ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.1-flash", "gemini-2.0-flash-lite"]
             for u in UTAMA:
                 if u in MODEL_LIST_DAPAT:
                     MODEL_CUBA.append(u)
-            # Lepas tu tambah semua flash lain yang ada
             for n in MODEL_LIST_DAPAT:
                 if "flash" in n.lower() and n not in MODEL_CUBA and "image" not in n.lower() and "preview" not in n.lower():
                     MODEL_CUBA.append(n)
@@ -51,12 +50,15 @@ if API_KEY:
         client = None
         gemini_error = str(e)
 
-def tanya_gemini(prompt):
+def tanya_gemini(prompt, gambar=None):
     global gemini_error
-    # Cuba satu-satu sampai ada yang jawab
     for nama_model in MODEL_CUBA:
         try:
-            res = client.models.generate_content(model=nama_model, contents=prompt)
+            if gambar:
+                from google.genai import types
+                res = client.models.generate_content(model=nama_model, contents=[prompt, gambar])
+            else:
+                res = client.models.generate_content(model=nama_model, contents=prompt)
             if res.text:
                 st.session_state["model_jaya"] = nama_model
                 return res.text.strip()
@@ -65,18 +67,26 @@ def tanya_gemini(prompt):
             continue
     return None
 
+def buat_gambar(prompt_gambar):
+    # Guna model gambar Gemini
+    try:
+        from google.genai import types
+        res = client.models.generate_content(model=MODEL_GAMBAR, contents=f"Buatkan gambar: {prompt_gambar}")
+        for part in res.candidates[0].content.parts:
+            if part.inline_data:
+                return part.inline_data.data
+        return None
+    except Exception as e:
+        st.session_state["gambar_error"] = str(e)
+        return None
+
 def check_kuota():
     if not client:
         return "❌ API KEY TAKDE / ROSAK"
-    if not MODEL_CUBA:
-        return "❌ TAKDE MODEL FLASH. Model Google bagi: " + str(MODEL_LIST_DAPAT)
     hasil = tanya_gemini("hi")
     if hasil:
-        return f"✅ KUOTA MASIH ADA! Model yang berjaya: {st.session_state.get('model_jaya', '?')} | Dah guna {st.session_state.get('guna_gemini', 0)} kali"
-    teks = gemini_error
-    if "429" in teks or "quota" in teks.lower() or "exceeded" in teks.lower():
-        return "🛑 KUOTA DAH HABIS! Tunggu esok. Error: " + teks
-    return "❌ ERROR: " + teks
+        return f"✅ KUOTA MASIH ADA! Model: {st.session_state.get('model_jaya', '?')}"
+    return "❌ ERROR: " + gemini_error
 
 if "chat" not in st.session_state:
     st.session_state.chat = []
@@ -84,33 +94,79 @@ if "guna_gemini" not in st.session_state:
     st.session_state.guna_gemini = 0
 if "model_jaya" not in st.session_state:
     st.session_state.model_jaya = "-"
+if "gambar_error" not in st.session_state:
+    st.session_state.gambar_error = ""
 
+# --- SIDEBAR ---
 with st.sidebar:
     st.write("📊 **KUOTA HAYDEN**")
-    st.write(f"Model berjaya tadi: {st.session_state.model_jaya}")
-    st.write(f"Dah guna Gemini: {st.session_state.guna_gemini} kali")
+    st.write(f"Model: {st.session_state.model_jaya} | Guna: {st.session_state.guna_gemini}")
     if st.button("Check Kuota Sekarang"):
-        with st.spinner("Check..."):
-            st.info(check_kuota())
+        st.info(check_kuota())
     st.write("**Error Terakhir:**")
-    st.code(gemini_error if gemini_error else "Tiada error lagi", language="text")
-    with st.expander("Senarai Model Cuba"):
-        st.write(MODEL_CUBA)
+    st.code(gemini_error if gemini_error else "Tiada", language="text")
 
+# --- PAPAR CHAT LAMA ---
 for m in st.session_state.chat:
     with st.chat_message(m["role"]):
-        st.write(m["text"])
+        if m.get("type") == "image":
+            st.image(m["image"], caption=m.get("text", ""))
+        else:
+            st.write(m["text"])
+
+# --- 3 FITUR BARU: VOICE + PHOTO + BUAT GAMBAR ---
+st.write("---")
+col1, col2, col3 = st.columns(3)
+with col1:
+    suara = st.audio_input("🎤 Voice")
+with col2:
+    foto = st.file_uploader("📷 Hantar Gambar", type=["jpg", "jpeg", "png", "webp"])
+with col3:
+    nak_gambar = st.text_input("🎨 Nak Buat Gambar? Taip sini", placeholder="cth: kucing main bola kat Seremban")
+
+# Kalau user hantar voice, tukar jadi teks
+teks_suara = ""
+if suara:
+    try:
+        from google.genai import types
+        # Gemini dengar audio terus
+        res = client.models.generate_content(model=MODEL_CUBA[0], contents=["Tolong tulis apa yang orang ni cakap dalam audio ni, dalam Bahasa Melayu. Tulis ayat dia je.", types.Part.from_bytes(data=suara.getvalue(), mime_type="audio/wav")])
+        teks_suara = res.text.strip()
+        st.info(f"🎤 Kau cakap: {teks_suara}")
+    except Exception as e:
+        st.error("Voice gagal: " + str(e))
+
+# Kalau user nak buat gambar
+if nak_gambar:
+    with st.spinner("HAYDEN tengah lukis..."):
+        data_gambar = buat_gambar(nak_gambar)
+        if data_gambar:
+            import base64
+            st.image(base64.b64decode(data_gambar), caption=nak_gambar)
+            st.session_state.chat.append({"role": "assistant", "text": f"Dah siap gambar: {nak_gambar}", "type": "text"})
+        else:
+            st.error("Buat gambar gagal: " + st.session_state.gambar_error + " | Model gambar mungkin tak aktif untuk kunci free kau. Cuba buat API Key baru.")
 
 tanya = st.chat_input("Tanya HAYDEN apa-apa...")
-if tanya:
-    st.session_state.chat.append({"role": "user", "text": tanya})
-    with st.chat_message("user"):
-        st.write(tanya)
+# Kalau ada voice, guna teks voice tu jadi soalan
+if teks_suara and not tanya:
+    tanya = teks_suara
+
+if tanya or foto:
+    soalan_final = tanya if tanya else "Apa yang kau nampak dalam gambar ni? Cerita dalam Bahasa Melayu santai."
+    if tanya:
+        st.session_state.chat.append({"role": "user", "text": tanya})
+        with st.chat_message("user"):
+            st.write(tanya)
+    if foto:
+        st.session_state.chat.append({"role": "user", "text": "Hantar gambar", "type": "image", "image": foto})
+        with st.chat_message("user"):
+            st.image(foto, caption="Gambar kau")
     with st.chat_message("assistant"):
         with st.spinner("HAYDEN tengah fikir..."):
             jawapan = ""
-            t_lower = tanya.lower().strip()
-            if t_lower in ["check kuota", "kuota", "check quota", "baki kuota"]:
+            t_lower = (tanya or "").lower().strip()
+            if t_lower in ["check kuota", "kuota", "check quota"]:
                 jawapan = check_kuota()
             elif t_lower.startswith("ajar aku"):
                 try:
@@ -120,31 +176,27 @@ if tanya:
                     jawapan_baru = bahagian[3].strip()
                     if kod_bos == "ADAM-BOS":
                         simpan_belajar(soalan_baru, jawapan_baru)
-                        jawapan = "Ok Bos, dah simpan."
+                        jawapan = "Ok, dah simpan."
                     else:
-                        jawapan = "Eh, ajar aku ni untuk Bos Adam je."
+                        jawapan = "Eh, ajar aku ni untuk Bos je."
                 except:
-                    jawapan = "Format Bos sahaja: ajar aku | ADAM-BOS | soalan | jawapan"
+                    jawapan = "Format: ajar aku | ADAM-BOS | soalan | jawapan"
             else:
-                jawapan = bos_hayden(tanya)
-                if jawapan == "TAK_TAHU":
-                    cari = cari_pengetahuan(tanya, NEWS_API_KEY)
-                    if cari:
-                        jawapan = cari
+                jawapan = bos_hayden(soalan_final) if not foto else "TAK_TAHU"
                 if jawapan == "TAK_TAHU" and client:
-                    prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + "\nSoalan: " + tanya
-                    hasil = tanya_gemini(prompt)
+                    prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + "\nSoalan: " + soalan_final
+                    # Kalau ada foto, bagi gambar kat Gemini sekali
+                    gambar_part = None
+                    if foto:
+                        from google.genai import types
+                        gambar_part = types.Part.from_bytes(data=foto.getvalue(), mime_type=foto.type)
+                    hasil = tanya_gemini(prompt, gambar_part)
                     if hasil:
                         jawapan = hasil
                         st.session_state.guna_gemini += 1
                     else:
                         jawapan = "GEMINI ERROR: " + gemini_error
                 if jawapan == "TAK_TAHU":
-                    if not API_KEY:
-                        jawapan = "GEMINI ERROR: API KEY KOSONG"
-                    elif gemini_error:
-                        jawapan = "GEMINI ERROR SETUP: " + gemini_error
-                    else:
-                        jawapan = "Aku tak tahu lagi yang ni, Bos."
+                    jawapan = "Aku tak tahu lagi yang ni."
             st.write(jawapan)
             st.session_state.chat.append({"role": "assistant", "text": jawapan})
