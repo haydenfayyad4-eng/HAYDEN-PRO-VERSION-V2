@@ -9,18 +9,15 @@ st.markdown("""
 <style>
 .stAppDeployButton {display:none !important; visibility:hidden !important;}
 header {visibility: hidden !important;}
-.block-container {padding-top: 10px !important; padding-bottom: 140px !important; max-width: 700px !important;}
-/* Butang emoji jadi bulat, besar, senang tekan kat phone */
-div[data-testid="stButton"] > button {
-    font-size: 22px !important;
-    padding: 2px 2px !important;
-    border-radius: 50% !important;
-    background: transparent !important;
-    border: none !important;
-    min-height: 38px !important;
-}
-div[data-testid="stButton"] > button:hover {
+.block-container {padding-top: 10px !important; padding-bottom: 120px !important; max-width: 700px !important;}
+/* Bagi kotak Message tu nampak macam WhatsApp */
+input[type="text"] {
     background: #2a3942 !important;
+    color: white !important;
+    border-radius: 25px !important;
+    border: none !important;
+    padding: 12px 16px !important;
+    font-size: 16px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -118,10 +115,7 @@ with st.sidebar:
             st.success("✅ Kuota Masih Ada!")
         else:
             st.error("❌ " + gemini_error)
-    st.write("Error:")
-    st.code(gemini_error if gemini_error else "Tiada")
 
-# --- PAPAR CHAT ---
 for m in st.session_state.chat:
     if m["role"] == "user":
         st.markdown(f"<div style='display:flex; justify-content:flex-end; margin:6px 0;'><div style='background:#005c4b; color:white; padding:9px 12px; border-radius:12px 12px 0 12px; max-width:80%; font-size:15px;'>{m['text']}</div></div>", unsafe_allow_html=True)
@@ -133,76 +127,21 @@ for m in st.session_state.chat:
         else:
             st.markdown(f"<div style='display:flex; justify-content:flex-start; margin:6px 0;'><div style='background:#202c33; color:white; padding:9px 12px; border-radius:12px 12px 12px 0; max-width:85%; font-size:15px;'>{m['text']}</div></div>", unsafe_allow_html=True)
 
-st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
+st.markdown("<div style='font-size:12px; color:#8696a0; text-align:center;'>💡 Nak emoji? Tekan kotak Message, lepas tu tekan 😀 kat keyboard phone kau - macam WhatsApp</div>", unsafe_allow_html=True)
 
-# ================= EMOJI BAR =================
-# Tekan emoji, dia masuk dalam Message terus
-st.markdown("<div style='font-size:13px; color:#8696a0; margin-bottom:2px;'>😀 Emoji Cepat - Tekan je:</div>", unsafe_allow_html=True)
-
-EMOJI_CEPAT = ["😂","❤️","👍","🔥","😭","😅","🙏","😍","😡","🤣","😮","👏"]
-cols = st.columns(len(EMOJI_CEPAT))
-for i, em in enumerate(EMOJI_CEPAT):
-    with cols[i]:
-        if st.button(em, key=f"em_{i}"):
-            st.session_state.msg_box = st.session_state.msg_box + em
-            st.rerun()
-
-# Emoji banyak lagi dalam ni, tekan untuk buka
-with st.expander("😀 Semua Emoji - Muka | Haiwan | Makan | Bola | Lain-lain"):
-    st.markdown("**😀 Muka**")
-    c = st.columns(8)
-    for i, em in enumerate(["😀","😁","😆","😊","😎","🤔","😴","🥳","😇","😈","🤯","🥺","😤","🤢","😱","💀"]):
-        with c[i % 8]:
-            if st.button(em, key=f"muka_{i}"):
-                st.session_state.msg_box += em
-                st.rerun()
-    st.markdown("**🐱 Haiwan**")
-    c = st.columns(8)
-    for i, em in enumerate(["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🦄"]):
-        with c[i % 8]:
-            if st.button(em, key=f"haiwan_{i}"):
-                st.session_state.msg_box += em
-                st.rerun()
-    st.markdown("**🍔 Makan**")
-    c = st.columns(8)
-    for i, em in enumerate(["🍔","🍕","🍟","🌭","🍿","🍩","🍦","🍰","🍫","☕","🧋","🍺","🍎","🍇","🍓","🌶️"]):
-        with c[i % 8]:
-            if st.button(em, key=f"makan_{i}"):
-                st.session_state.msg_box += em
-                st.rerun()
-    st.markdown("**⚽ Bola & Negeri Sembilan**")
-    c = st.columns(8)
-    for i, em in enumerate(["⚽","🏆","🥇","🎯","🏸","🏀","🚴","🏊","🇲🇾","❤️","💛","🖤","🔥","💪","👑","🎉"]):
-        with c[i % 8]:
-            if st.button(em, key=f"bola_{i}"):
-                st.session_state.msg_box += em
-                st.rerun()
-    st.markdown("**👋 Lain-lain**")
-    c = st.columns(8)
-    for i, em in enumerate(["👋","🤝","👌","✌️","🤞","🫡","🙌","👀","💯","✨","⭐","🌙","☀️","🌧️","🚗","🏠"]):
-        with c[i % 8]:
-            if st.button(em, key=f"lain_{i}"):
-                st.session_state.msg_box += em
-                st.rerun()
-    if st.button("🗑️ Padam Message"):
-        st.session_state.msg_box = ""
-        st.rerun()
-
-# ================= BAR BAWAH MACAM WHATSAPP =================
+# --- BAR BAWAH MACAM WHATSAPP, BERSIH ---
 c1, c2, c3, c4 = st.columns([6, 1, 1, 1])
 with c1:
     tanya = st.text_input("Message", placeholder="Message", label_visibility="collapsed", key="msg_box")
 with c2:
     foto = st.file_uploader("📎", type=["jpg","jpeg","png","webp"], label_visibility="collapsed", key="attach")
-    st.markdown("<div style='text-align:center; font-size:11px; color:#8696a0; margin-top:-18px;'>📎</div>", unsafe_allow_html=True)
 with c3:
     kamera = st.camera_input("📷", label_visibility="collapsed", key="cam")
-    st.markdown("<div style='text-align:center; font-size:11px; color:#8696a0; margin-top:-18px;'>📷</div>", unsafe_allow_html=True)
 with c4:
     suara = st.audio_input("🎤", label_visibility="collapsed", key="mic")
-    st.markdown("<div style='text-align:center; font-size:11px; color:#00a884; margin-top:-18px;'>🎤</div>", unsafe_allow_html=True)
 
-nak_gambar = st.text_input("🎨 Buat Gambar", placeholder="🎨 Taip nak gambar apa... cth: kucing main bola kat Seremban", label_visibility="collapsed", key="buat_gambar_box")
+nak_gambar = st.text_input("🎨 Buat Gambar", placeholder="🎨 Taip nak gambar apa...", label_visibility="collapsed", key="buat_gambar_box")
 hantar = st.button("➤ Hantar", use_container_width=True)
 
 teks_suara = ""
@@ -233,6 +172,42 @@ if (hantar and (tanya or gambar_final)) or gambar_final:
     soalan_final = tanya if tanya else "Apa yang kau nampak dalam gambar ni? Cerita santai Bahasa Melayu."
     if tanya:
         st.session_state.chat.append({"role": "user", "text": tanya})
+    if gambar_final:
+        st.session_state.chat.append({"role": "user", "text": "📷 Gambar", "image": gambar_final})
+    with st.spinner("HAYDEN tengah fikir..."):
+        jawapan = ""
+        t_lower = (tanya or "").lower().strip()
+        if t_lower in ["check kuota", "kuota"]:
+            jawapan = "✅ Kuota masih ada" if tanya_gemini("hi") else "❌ " + gemini_error
+        elif t_lower.startswith("ajar aku"):
+            try:
+                bahagian = tanya.split("|", 3)
+                if bahagian[1].strip() == "ADAM-BOS":
+                    simpan_belajar(bahagian[2].strip(), bahagian[3].strip())
+                    jawapan = "Ok, dah simpan."
+                else:
+                    jawapan = "Eh, untuk Bos je."
+            except:
+                jawapan = "Format: ajar aku | ADAM-BOS | soalan | jawapan"
+        else:
+            jawapan = bos_hayden(soalan_final) if not gambar_final else "TAK_TAHU"
+            if jawapan == "TAK_TAHU" and client:
+                prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + "\nSoalan: " + soalan_final
+                gambar_part = None
+                if gambar_final:
+                    from google.genai import types
+                    gambar_part = types.Part.from_bytes(data=gambar_final.getvalue(), mime_type=gambar_final.type if hasattr(gambar_final, 'type') else "image/jpeg")
+                hasil = tanya_gemini(prompt, gambar_part)
+                if hasil:
+                    jawapan = hasil
+                    st.session_state.guna_gemini += 1
+                else:
+                    jawapan = "GEMINI ERROR: " + gemini_error
+            if jawapan == "TAK_TAHU":
+                jawapan = "Aku tak tahu lagi yang ni."
+        st.session_state.chat.append({"role": "assistant", "text": jawapan})
+        st.session_state.msg_box = ""
+        st.rerun(): "user", "text": tanya})
     if gambar_final:
         st.session_state.chat.append({"role": "user", "text": "📷 Gambar", "image": gambar_final})
     with st.spinner("HAYDEN tengah fikir..."):
