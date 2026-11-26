@@ -17,12 +17,6 @@ try:
 except:
     NEWS_API_KEY = ""
 
-# --- TUNJUK API KEY ADA KE TAK ---
-if not API_KEY:
-    st.warning("⚠️ GEMINI_API_KEY TAKDE KAT SECRETS!")
-else:
-    st.success("✅ GEMINI_API_KEY ADA, panjang: " + str(len(API_KEY)))
-
 # --- GEMINI SETUP ---
 model = None
 if API_KEY:
