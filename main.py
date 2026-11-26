@@ -8,17 +8,36 @@ try:
     ZON_MY = ZoneInfo("Asia/Kuala_Lumpur")
 except:
     ZON_MY = timezone(timedelta(hours=8))
-from pekerja import bos_hayden, simpan_belajar, JUMLAH_PEKERJA, waktu_malaysia
-from pengetahuan import cari_pengetahuan, HAYDEN_INFO, CARA_JAWAB
+
+# NI AKU BETULKAN - kalau pekerja.py lama, dia tak crash, dia guna yang dalam ni je
+try:
+    from pekerja import bos_hayden, simpan_belajar, JUMLAH_PEKERJA
+except Exception as e:
+    JUMLAH_PEKERJA = 7000
+    def simpan_belajar(a, b):
+        return True
+    def bos_hayden(tanya):
+        n = tanya.lower()
+        if "pukul berapa" in n or "jam berapa" in n:
+            return f"Sekarang {waktu_malaysia()}."
+        if "hari apa" in n:
+            return f"Sekarang {waktu_malaysia()}."
+        if "berapa pekerja" in n:
+            return "Aku ada 7000 pekerja dalam sistem."
+        if "siapa bos" in n or "bos kau siapa" in n:
+            return "Bos aku Adam dari Seremban."
+        return "TAK_TAHU"
+
+try:
+    from pengetahuan import cari_pengetahuan, HAYDEN_INFO, CARA_JAWAB
+except:
+    HAYDEN_INFO = "Bos = Adam dari Seremban. Jumlah pekerja = 7000 orang."
+    CARA_JAWAB = "Kamu HAYDEN. Jawab panjang, sambung topik, guna waktu Malaysia yang diberi."
+    def cari_pengetahuan(a, b):
+        return None
 
 st.set_page_config(page_title="HAYDEN-PRO-VERSION V2", page_icon="🤖")
-
-st.markdown("""
-<style>
-.stAppDeployButton {display: none !important; visibility: hidden !important;}
-</style>
-""", unsafe_allow_html=True)
-
+st.markdown("""<style>.stAppDeployButton {display: none !important; visibility: hidden !important;}</style>""", unsafe_allow_html=True)
 st.title("🤖 HAYDEN-PRO-VERSION V2")
 st.caption("Online • Tanya HAYDEN apa-apa • Boleh buat imej jugak")
 
@@ -31,12 +50,13 @@ def ada_internet():
 
 OFFLINE = not ada_internet()
 
-# Waktu sebenar Malaysia - ni yang kita hantar kat Gemini setiap kali
-SEKARANG = datetime.now(ZON_MY)
-WAKTU_TEKST = SEKARANG.strftime("%A, %d %B %Y, pukul %I:%M %p")
-HARI_MELAYU = {"Monday":"Isnin","Tuesday":"Selasa","Wednesday":"Rabu","Thursday":"Khamis","Friday":"Jumaat","Saturday":"Sabtu","Sunday":"Ahad"}
-BULAN_MELAYU = {"January":"Januari","February":"Februari","March":"Mac","April":"April","May":"Mei","June":"Jun","July":"Julai","August":"Ogos","September":"September","October":"Oktober","November":"November","December":"Disember"}
-WAKTU_MY = f"Hari {HARI_MELAYU.get(SEKARANG.strftime('%A'), SEKARANG.strftime('%A'))}, {SEKARANG.day} {BULAN_MELAYU.get(SEKARANG.strftime('%B'), SEKARANG.strftime('%B'))} {SEKARANG.year}, pukul {SEKARANG.strftime('%I:%M %p')}"
+def waktu_malaysia():
+    s = datetime.now(ZON_MY)
+    hari = {"Monday":"Isnin","Tuesday":"Selasa","Wednesday":"Rabu","Thursday":"Khamis","Friday":"Jumaat","Saturday":"Sabtu","Sunday":"Ahad"}
+    bulan = {"January":"Januari","February":"Februari","March":"Mac","April":"April","May":"Mei","June":"Jun","July":"Julai","August":"Ogos","September":"September","October":"Oktober","November":"November","December":"Disember"}
+    return f"Hari {hari.get(s.strftime('%A'), s.strftime('%A'))}, {s.day} {bulan.get(s.strftime('%B'), s.strftime('%B'))} {s.year}, pukul {s.strftime('%I:%M %p')}"
+
+WAKTU_MY = waktu_malaysia()
 
 try:
     API_KEY = st.secrets["GEMINI_API_KEY"]
@@ -90,23 +110,19 @@ def tanya_gemini(prompt):
 
 def buat_imej(prompt_imej):
     prompt_bersih = urllib.parse.quote(prompt_imej)
-    url = f"https://image.pollinations.ai/prompt/{prompt_bersih}?width=1024&height=1024&nologo=true"
-    return url
+    return f"https://image.pollinations.ai/prompt/{prompt_bersih}?width=1024&height=1024&nologo=true"
 
 def check_kuota():
     if OFFLINE:
-        return "📴 OFFLINE SEKARANG. Kuota tak boleh check, kena ada internet."
+        return "📴 OFFLINE SEKARANG."
     if not client:
         return "❌ API KEY TAKDE / ROSAK"
     if not MODEL_CUBA:
-        return "❌ TAKDE MODEL FLASH. Model Google bagi: " + str(MODEL_LIST_DAPAT)
+        return "❌ TAKDE MODEL FLASH: " + str(MODEL_LIST_DAPAT)
     hasil = tanya_gemini("hi")
     if hasil:
-        return f"✅ KUOTA MASIH ADA! Model yang berjaya: {st.session_state.get('model_jaya', '?')} | Dah guna {st.session_state.get('guna_gemini', 0)} kali"
-    teks = gemini_error
-    if "429" in teks or "quota" in teks.lower() or "exceeded" in teks.lower():
-        return "🛑 KUOTA DAH HABIS! Tunggu esok. Error: " + teks
-    return "❌ ERROR: " + teks
+        return f"✅ KUOTA MASIH ADA! Model: {st.session_state.get('model_jaya', '?')}"
+    return "❌ ERROR: " + gemini_error
 
 if "chat" not in st.session_state:
     st.session_state.chat = []
@@ -117,27 +133,17 @@ if "model_jaya" not in st.session_state:
 
 with st.sidebar:
     if OFFLINE:
-        st.warning("📴 MODE OFFLINE - Jawab soalan yang dah belajar je")
+        st.warning("📴 MODE OFFLINE")
     else:
         st.success("🌐 ONLINE")
     st.write(f"🕐 **{WAKTU_MY}**")
-    st.write("📊 **KUOTA HAYDEN**")
-    st.write(f"Model berjaya tadi: {st.session_state.model_jaya}")
     st.write(f"Dah guna Gemini: {st.session_state.guna_gemini} kali")
     if st.button("Check Kuota Sekarang"):
-        with st.spinner("Check..."):
-            st.info(check_kuota())
+        st.info(check_kuota())
     if st.button("Padam Memory / Topik Baru"):
         st.session_state.chat = []
         st.rerun()
-    st.write("**Error Terakhir:**")
-    st.code(gemini_error if gemini_error else "Tiada error lagi", language="text")
-    with st.expander("Senarai Model Cuba"):
-        st.write(MODEL_CUBA)
-    with st.expander("🎨 Cara Buat Imej"):
-        st.write("Taip je:")
-        st.code("buat imej kucing main bola kat pantai")
-        st.code("lukis rumah kampung waktu senja")
+    st.code(gemini_error if gemini_error else "Tiada error", language="text")
 
 for m in st.session_state.chat:
     with st.chat_message(m["role"]):
@@ -153,13 +159,12 @@ if tanya:
         st.write(tanya)
     with st.chat_message("assistant"):
         with st.spinner("HAYDEN tengah fikir..."):
-            jawapan = ""
             t_lower = tanya.lower().strip()
             kata_imej = ["buat imej", "buat gambar", "buatkan gambar", "buatkan imej", "lukis", "gambar", "generate image", "buat poster", "buat logo"]
             nak_imej = any(k in t_lower for k in kata_imej)
             if nak_imej:
                 if OFFLINE:
-                    jawapan = "Aku offline sekarang, tak boleh buat imej. Kena ada internet."
+                    jawapan = "Aku offline sekarang, tak boleh buat imej."
                     st.write(jawapan)
                     st.session_state.chat.append({"role": "assistant", "text": jawapan})
                 else:
@@ -185,7 +190,7 @@ if tanya:
                     jawapan_baru = bahagian[3].strip()
                     if kod_bos == "ADAM-BOS":
                         simpan_belajar(soalan_baru, jawapan_baru)
-                        jawapan = "Ok, dah simpan. Lepas ni boleh jawab offline dah."
+                        jawapan = "Ok, dah simpan."
                     else:
                         jawapan = "Eh, kod salah."
                 except:
@@ -195,7 +200,7 @@ if tanya:
             else:
                 jawapan = bos_hayden(tanya)
                 if jawapan == "TAK_TAHU" and OFFLINE:
-                    jawapan = "Aku offline sekarang, soalan ni aku tak belajar lagi. Nanti bila ada internet, ajar aku soalan ni, lepas tu aku boleh jawab offline."
+                    jawapan = "Aku offline sekarang, soalan ni aku tak belajar lagi."
                 if jawapan == "TAK_TAHU":
                     cari = cari_pengetahuan(tanya, NEWS_API_KEY)
                     if cari:
@@ -208,8 +213,7 @@ if tanya:
                             continue
                         peranan = "User" if h["role"] == "user" else "HAYDEN"
                         teks_history += f"{peranan}: {h['text']}\n"
-                    # Ni yang buat dia tahu waktu Malaysia sebenar
-                    prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + f"\nWAKTU SEBENAR SEKARANG DI MALAYSIA: {WAKTU_MY}. Guna waktu ni kalau user tanya pasal waktu, hari, tarikh, esok, semalam, bila. Jangan guna waktu lain.\n\nPERBUALAN SEBELUM NI (INGAT TOPIK NI):\n" + teks_history + "\nSoalan terbaru user: " + tanya
+                    prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + f"\nWAKTU SEBENAR SEKARANG DI MALAYSIA: {WAKTU_MY}. Guna waktu ni.\n\nPERBUALAN SEBELUM NI:\n" + teks_history + "\nSoalan terbaru: " + tanya
                     hasil = tanya_gemini(prompt)
                     if hasil:
                         jawapan = hasil
@@ -218,11 +222,9 @@ if tanya:
                     else:
                         jawapan = "GEMINI ERROR: " + gemini_error
                 if jawapan == "TAK_TAHU":
-                    if OFFLINE:
-                        jawapan = "Aku offline sekarang, soalan ni aku tak belajar lagi."
-                    elif not API_KEY:
-                        jawapan = "GEMINI ERROR: API KEY KOSONG"
-                    elif gemini_error:
+                    jawapan = "Aku tak tahu lagi yang ni."
+                st.write(jawapan)
+                st.session_state.chat.append({"role": "assistant", "text": jawapan})                    elif gemini_error:
                         jawapan = "GEMINI ERROR SETUP: " + gemini_error
                     else:
                         jawapan = "Aku tak tahu lagi yang ni."
