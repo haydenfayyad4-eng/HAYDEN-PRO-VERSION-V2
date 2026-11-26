@@ -10,7 +10,6 @@ st.markdown("""
 .stAppDeployButton {display:none !important; visibility:hidden !important;}
 header {visibility: hidden !important;}
 .block-container {padding-top: 10px !important; padding-bottom: 120px !important; max-width: 700px !important;}
-/* Bagi kotak Message tu nampak macam WhatsApp */
 input[type="text"] {
     background: #2a3942 !important;
     color: white !important;
@@ -22,7 +21,6 @@ input[type="text"] {
 </style>
 """, unsafe_allow_html=True)
 
-# --- HEADER ---
 st.markdown("""
 <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #222;">
   <div style="width:42px; height:42px; border-radius:50%; background:#00a884; display:flex; align-items:center; justify-content:center; font-size:22px;">🤖</div>
@@ -64,147 +62,4 @@ if API_KEY:
                     MODEL_CUBA.append(n)
         except Exception as e:
             gemini_error = str(e)
-    except Exception as e:
-        client = None
-        gemini_error = str(e)
-
-def tanya_gemini(prompt, gambar=None):
-    global gemini_error
-    for nama_model in MODEL_CUBA:
-        try:
-            if gambar:
-                from google.genai import types
-                res = client.models.generate_content(model=nama_model, contents=[prompt, gambar])
-            else:
-                res = client.models.generate_content(model=nama_model, contents=prompt)
-            if res.text:
-                st.session_state["model_jaya"] = nama_model
-                return res.text.strip()
-        except Exception as e:
-            gemini_error = f"[{nama_model}] {str(e)}"
-            continue
-    return None
-
-def buat_gambar(prompt_gambar):
-    try:
-        res = client.models.generate_content(model=MODEL_GAMBAR, contents=f"Buatkan gambar: {prompt_gambar}")
-        for part in res.candidates[0].content.parts:
-            if part.inline_data:
-                return part.inline_data.data
-        return None
-    except Exception as e:
-        st.session_state["gambar_error"] = str(e)
-        return None
-
-if "chat" not in st.session_state:
-    st.session_state.chat = []
-if "guna_gemini" not in st.session_state:
-    st.session_state.guna_gemini = 0
-if "model_jaya" not in st.session_state:
-    st.session_state.model_jaya = "-"
-if "gambar_error" not in st.session_state:
-    st.session_state.gambar_error = ""
-if "msg_box" not in st.session_state:
-    st.session_state.msg_box = ""
-
-with st.sidebar:
-    st.write("📊 Kuota")
-    st.write(f"Model: {st.session_state.model_jaya} | Guna: {st.session_state.guna_gemini}")
-    if st.button("Check Kuota"):
-        if tanya_gemini("hi"):
-            st.success("✅ Kuota Masih Ada!")
-        else:
-            st.error("❌ " + gemini_error)
-
-for m in st.session_state.chat:
-    if m["role"] == "user":
-        st.markdown(f"<div style='display:flex; justify-content:flex-end; margin:6px 0;'><div style='background:#005c4b; color:white; padding:9px 12px; border-radius:12px 12px 0 12px; max-width:80%; font-size:15px;'>{m['text']}</div></div>", unsafe_allow_html=True)
-        if m.get("image"):
-            st.image(m["image"], width=250)
-    else:
-        if m.get("type") == "image":
-            st.image(m["image"], caption=m.get("text",""))
-        else:
-            st.markdown(f"<div style='display:flex; justify-content:flex-start; margin:6px 0;'><div style='background:#202c33; color:white; padding:9px 12px; border-radius:12px 12px 12px 0; max-width:85%; font-size:15px;'>{m['text']}</div></div>", unsafe_allow_html=True)
-
-st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
-st.markdown("<div style='font-size:12px; color:#8696a0; text-align:center;'>💡 Nak emoji? Tekan kotak Message, lepas tu tekan 😀 kat keyboard phone kau - macam WhatsApp</div>", unsafe_allow_html=True)
-
-# --- BAR BAWAH MACAM WHATSAPP, BERSIH ---
-c1, c2, c3, c4 = st.columns([6, 1, 1, 1])
-with c1:
-    tanya = st.text_input("Message", placeholder="Message", label_visibility="collapsed", key="msg_box")
-with c2:
-    foto = st.file_uploader("📎", type=["jpg","jpeg","png","webp"], label_visibility="collapsed", key="attach")
-with c3:
-    kamera = st.camera_input("📷", label_visibility="collapsed", key="cam")
-with c4:
-    suara = st.audio_input("🎤", label_visibility="collapsed", key="mic")
-
-nak_gambar = st.text_input("🎨 Buat Gambar", placeholder="🎨 Taip nak gambar apa...", label_visibility="collapsed", key="buat_gambar_box")
-hantar = st.button("➤ Hantar", use_container_width=True)
-
-teks_suara = ""
-if suara:
-    try:
-        from google.genai import types
-        res = client.models.generate_content(model=MODEL_CUBA[0], contents=["Tulis apa orang ni cakap dalam audio ni, dalam Bahasa Melayu. Tulis ayat dia je.", types.Part.from_bytes(data=suara.getvalue(), mime_type="audio/wav")])
-        teks_suara = res.text.strip()
-        st.info(f"🎤 Kau cakap: {teks_suara}")
-    except Exception as e:
-        st.error("Voice gagal: " + str(e))
-
-if teks_suara and not tanya:
-    tanya = teks_suara
-
-if nak_gambar:
-    with st.spinner("HAYDEN tengah lukis..."):
-        data_gambar = buat_gambar(nak_gambar)
-        if data_gambar:
-            img_bytes = base64.b64decode(data_gambar)
-            st.image(img_bytes, caption=nak_gambar)
-            st.session_state.chat.append({"role": "assistant", "text": f"Dah siap gambar: {nak_gambar}"})
-        else:
-            st.error("Buat gambar gagal: " + st.session_state.gambar_error)
-
-gambar_final = foto if foto else kamera
-if (hantar and (tanya or gambar_final)) or gambar_final:
-    soalan_final = tanya if tanya else "Apa yang kau nampak dalam gambar ni? Cerita santai Bahasa Melayu."
-    if tanya:
-        st.session_state.chat.append({"role": "user", "text": tanya})
-    if gambar_final:
-        st.session_state.chat.append({"role": "user", "text": "📷 Gambar", "image": gambar_final})
-    with st.spinner("HAYDEN tengah fikir..."):
-        jawapan = ""
-        t_lower = (tanya or "").lower().strip()
-        if t_lower in ["check kuota", "kuota"]:
-            jawapan = "✅ Kuota masih ada" if tanya_gemini("hi") else "❌ " + gemini_error
-        elif t_lower.startswith("ajar aku"):
-            try:
-                bahagian = tanya.split("|", 3)
-                if bahagian[1].strip() == "ADAM-BOS":
-                    simpan_belajar(bahagian[2].strip(), bahagian[3].strip())
-                    jawapan = "Ok, dah simpan."
-                else:
-                    jawapan = "Eh, untuk Bos je."
-            except:
-                jawapan = "Format: ajar aku | ADAM-BOS | soalan | jawapan"
-        else:
-            jawapan = bos_hayden(soalan_final) if not gambar_final else "TAK_TAHU"
-            if jawapan == "TAK_TAHU" and client:
-                prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + "\nSoalan: " + soalan_final
-                gambar_part = None
-                if gambar_final:
-                    from google.genai import types
-                    gambar_part = types.Part.from_bytes(data=gambar_final.getvalue(), mime_type=gambar_final.type if hasattr(gambar_final, 'type') else "image/jpeg")
-                hasil = tanya_gemini(prompt, gambar_part)
-                if hasil:
-                    jawapan = hasil
-                    st.session_state.guna_gemini += 1
-                else:
-                    jawapan = "GEMINI ERROR: " + gemini_error
-            if jawapan == "TAK_TAHU":
-                jawapan = "Aku tak tahu lagi yang ni."
-        st.session_state.chat.append({"role": "assistant", "text": jawapan})
-        st.session_state.msg_box = ""
-        st.rerun()
+    except
