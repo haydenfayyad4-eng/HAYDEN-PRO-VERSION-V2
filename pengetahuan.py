@@ -1,25 +1,13 @@
+import os
 import requests
-HAYDEN_INFO = "HAYDEN-PRO-VERSION V2 dibuat oleh Bos Adam dari Seremban. Ada 7000 pekerja."
-CARA_JAWAB = "Kau adalah HAYDEN, AI dari Seremban. Jawab dalam Bahasa Melayu santai macam kawan. Bos kau nama Adam. Kau ada 7000 pekerja."
-def cari_pengetahuan(tanya, news_api_key=""):
-    t = tanya.lower()
-    if "berita" in t or "news" in t:
-        if not news_api_key:
-            return "Berita: NEWS_API_KEY takde lagi kat Secrets, Bos."
-        try:
-            url = "https://newsapi.org/v2/top-headlines?country=my&pageSize=5&apiKey=" + news_api_key
-            r = requests.get(url, timeout=10)
-            data = r.json()
-            if "articles" not in data or len(data["articles"]) == 0:
-                return ""
-            teks = "BERITA TERKINI MALAYSIA:\n"
-            for a in data["articles"][:5]:
-                teks += "- " + a.get("title", "") + "\n"
-            return teks
-        except:
-            return ""
-    if "cuaca" in t or "weather" in t:
-        return "CUACA: Kat Seremban sekarang selalunya panas tengah hari, petang hujan."
-    if "harga emas" in t or "emas" in t:
-        return "HARGA EMAS: Harga emas naik turun setiap hari Bos."
-    return ""
+
+HAYDEN_INFO = "HAYDEN-PRO-VERSION V2. Jangan sebut nama bos atau jumlah pekerja kecuali user tanya sendiri siapa bos kau / berapa pekerja kau. Jawab terus soalan user."
+
+CARA_JAWAB = """
+Kamu HAYDEN. Jawab terus soalan user. Jangan ulang intro. Jangan cakap 'memang la bos aku si Adam' atau 'aku ada 7000 pekerja' dalam setiap jawapan. Hanya sebut kalau user tanya pasal tu.
+Gaya cakap: santai, macam kawan, bahasa Melayu campur sikit English, pendek dan padat. Jangan berleter panjang.
+Kalau user tanya pasal Negeri Sembilan, jawab elok-elok.
+"""
+
+def cari_pengetahuan(soalan, api_key):
+    return None
