@@ -25,42 +25,63 @@ except:
 
 client = None
 gemini_error = ""
-MODEL_LIST = ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-2.0-flash"]
+MODEL_PILIH = None
+MODEL_LIST_DAPAT = []
+
 if API_KEY:
     try:
         from google import genai
         client = genai.Client(api_key=API_KEY)
+        # TANYA GOOGLE SENDIRI MODEL APA YANG ADA UNTUK KUNCI NI
+        try:
+            for m in client.models.list():
+                nama = m.name.replace("models/", "")
+                MODEL_LIST_DAPAT.append(nama)
+            # Cari yang ada perkataan flash dulu, sebab paling laju & free
+            for n in MODEL_LIST_DAPAT:
+                if "flash" in n.lower() and "2.5" in n:
+                    MODEL_PILIH = n
+                    break
+            if not MODEL_PILIH:
+                for n in MODEL_LIST_DAPAT:
+                    if "flash" in n.lower():
+                        MODEL_PILIH = n
+                        break
+            if not MODEL_PILIH and MODEL_LIST_DAPAT:
+                MODEL_PILIH = MODEL_LIST_DAPAT[0]
+        except Exception as e:
+            gemini_error = "LIST MODEL GAGAL: " + str(e)
     except Exception as e:
         client = None
         gemini_error = str(e)
 
 def tanya_gemini(prompt):
     global gemini_error
-    for nama_model in MODEL_LIST:
-        try:
-            res = client.models.generate_content(model=nama_model, contents=prompt)
-            return res.text.strip()
-        except Exception as e:
-            gemini_error = str(e)
-            continue
-    return None
+    if not MODEL_PILIH:
+        return None
+    try:
+        res = client.models.generate_content(model=MODEL_PILIH, contents=prompt)
+        return res.text.strip()
+    except Exception as e:
+        gemini_error = str(e)
+        return None
 
 def check_kuota():
-    # Test panggil Gemini dengan soalan paling pendek, paling jimat kuota
     if not client:
         return "❌ API KEY TAKDE / ROSAK. Kena buat API Key baru kat aistudio.google.com/apikey"
+    if not MODEL_PILIH:
+        return "❌ GOOGLE TAK BAGI SEBARANG MODEL UNTUK KUNCI NI. Model yang ada: " + str(MODEL_LIST_DAPAT) + " | Error: " + gemini_error + " | Cuba buat API Key baru dalam project baru."
     try:
-        res = client.models.generate_content(model="gemini-2.5-flash-lite", contents="hi")
-        # Kalau sampai sini, maknanya kuota masih ada
-        return "✅ KUOTA MASIH ADA! API Key kau elok. Boleh tanya macam biasa. Tadi kau dah guna " + str(st.session_state.get("guna_gemini", 0)) + " kali dalam sesi ni."
+        res = client.models.generate_content(model=MODEL_PILIH, contents="hi")
+        return f"✅ KUOTA MASIH ADA! Model yang HAYDEN pakai sekarang: {MODEL_PILIH}. Dah guna {st.session_state.get('guna_gemini', 0)} kali sesi ni."
     except Exception as e:
         teks = str(e)
         if "429" in teks or "quota" in teks.lower() or "exceeded" in teks.lower():
-            return "🛑 KUOTA DAH HABIS! Google kata dah limit. Tunggu esok pagi, dia reset balik sendiri. Jangan tanya lagi hari ni, nanti dia block lagi lama."
-        if "404" in teks or "not found" in teks.lower():
-            return "⚠️ 404 - MODEL TAK JUMPA. Bukan kuota habis, tapi nama model tu Google dah tukar. Kena update MODEL_LIST kat main.py."
+            return "🛑 KUOTA DAH HABIS! Tunggu esok pagi reset."
+        if "404" in teks:
+            return f"⚠️ 404 lagi walaupun auto-detect. Model cuba: {MODEL_PILIH}. Model yang Google bagi: {MODEL_LIST_DAPAT}"
         if "API_KEY_INVALID" in teks or "API key not valid" in teks:
-            return "❌ API KEY SALAH / DAH MATI. Kena buat API Key baru, paste kat Secrets, Reboot."
+            return "❌ API KEY SALAH / DAH MATI. Buat baru, paste kat Secrets, Reboot."
         return "❌ ERROR LAIN: " + teks
 
 if "chat" not in st.session_state:
@@ -68,13 +89,15 @@ if "chat" not in st.session_state:
 if "guna_gemini" not in st.session_state:
     st.session_state.guna_gemini = 0
 
-# SIDEBAR KUOTA
 with st.sidebar:
     st.write("📊 **KUOTA HAYDEN**")
+    st.write(f"Model aktif: {MODEL_PILIH if MODEL_PILIH else 'TAK JUMPA'}")
     st.write(f"Dah guna Gemini: {st.session_state.guna_gemini} kali (sesi ni)")
     if st.button("Check Kuota Sekarang"):
         with st.spinner("Check..."):
             st.info(check_kuota())
+    with st.expander("Senarai Model Google Bagi"):
+        st.write(MODEL_LIST_DAPAT if MODEL_LIST_DAPAT else "Kosong - Google tak bagi langsung")
 
 for m in st.session_state.chat:
     with st.chat_message(m["role"]):
