@@ -1,26 +1,19 @@
 import streamlit as st
 import os
-from pekerja import bos_hayden, simpan_belajar
+from pekerja import bos_hayden, simpan_belajar, JUMLAH_PEKERJA
 from pengetahuan import cari_pengetahuan, HAYDEN_INFO, CARA_JAWAB
 
 st.set_page_config(page_title="HAYDEN-PRO-VERSION V2", page_icon="🤖")
 
-# --- SOROK MANAGE APP / SHARE / MENU UNTUK SEMUA ORANG ---
-# Bos nak manage, pergi kat share.streamlit.io, jangan dalam app ni
+# --- SOROK MANAGE APP JE, SHARE BIAR ADA ---
 st.markdown("""
 <style>
-[data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
-[data-testid="stDecoration"] {visibility: hidden !important; display: none !important;}
-[data-testid="stStatusWidget"] {visibility: hidden !important; display: none !important;}
-#MainMenu {visibility: hidden !important; display: none !important;}
-footer {visibility: hidden !important; display: none !important;}
-header {visibility: hidden !important; display: none !important;}
-.stAppDeployButton {display: none !important;}
+.stAppDeployButton {display: none !important; visibility: hidden !important;}
 </style>
 """, unsafe_allow_html=True)
 
 st.title("🤖 HAYDEN-PRO-VERSION V2")
-st.caption("Bos: Adam dari Seremban")
+st.caption(f"Bos: Adam dari Seremban | Pekerja: {JUMLAH_PEKERJA} orang")
 
 try:
     API_KEY = st.secrets["GEMINI_API_KEY"]
@@ -70,8 +63,6 @@ if tanya:
     with st.chat_message("assistant"):
         with st.spinner("HAYDEN tengah fikir..."):
             jawapan = ""
-            # AJAR AKU - KUNCI UNTUK BOS JE. KOD: ADAM-BOS
-            # Cara Bos ajar: ajar aku | ADAM-BOS | soalan | jawapan
             if tanya.lower().startswith("ajar aku"):
                 try:
                     bahagian = tanya.split("|", 3)
