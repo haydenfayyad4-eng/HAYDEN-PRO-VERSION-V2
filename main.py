@@ -25,7 +25,7 @@ except:
 
 client = None
 gemini_error = ""
-MODEL_LIST = ["gemini-2.5-flash", "gemini-2.0-flash"]
+MODEL_LIST = ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-2.0-flash"]
 if API_KEY:
     try:
         from google import genai
@@ -45,8 +45,36 @@ def tanya_gemini(prompt):
             continue
     return None
 
+def check_kuota():
+    # Test panggil Gemini dengan soalan paling pendek, paling jimat kuota
+    if not client:
+        return "❌ API KEY TAKDE / ROSAK. Kena buat API Key baru kat aistudio.google.com/apikey"
+    try:
+        res = client.models.generate_content(model="gemini-2.5-flash-lite", contents="hi")
+        # Kalau sampai sini, maknanya kuota masih ada
+        return "✅ KUOTA MASIH ADA! API Key kau elok. Boleh tanya macam biasa. Tadi kau dah guna " + str(st.session_state.get("guna_gemini", 0)) + " kali dalam sesi ni."
+    except Exception as e:
+        teks = str(e)
+        if "429" in teks or "quota" in teks.lower() or "exceeded" in teks.lower():
+            return "🛑 KUOTA DAH HABIS! Google kata dah limit. Tunggu esok pagi, dia reset balik sendiri. Jangan tanya lagi hari ni, nanti dia block lagi lama."
+        if "404" in teks or "not found" in teks.lower():
+            return "⚠️ 404 - MODEL TAK JUMPA. Bukan kuota habis, tapi nama model tu Google dah tukar. Kena update MODEL_LIST kat main.py."
+        if "API_KEY_INVALID" in teks or "API key not valid" in teks:
+            return "❌ API KEY SALAH / DAH MATI. Kena buat API Key baru, paste kat Secrets, Reboot."
+        return "❌ ERROR LAIN: " + teks
+
 if "chat" not in st.session_state:
     st.session_state.chat = []
+if "guna_gemini" not in st.session_state:
+    st.session_state.guna_gemini = 0
+
+# SIDEBAR KUOTA
+with st.sidebar:
+    st.write("📊 **KUOTA HAYDEN**")
+    st.write(f"Dah guna Gemini: {st.session_state.guna_gemini} kali (sesi ni)")
+    if st.button("Check Kuota Sekarang"):
+        with st.spinner("Check..."):
+            st.info(check_kuota())
 
 for m in st.session_state.chat:
     with st.chat_message(m["role"]):
@@ -60,7 +88,10 @@ if tanya:
     with st.chat_message("assistant"):
         with st.spinner("HAYDEN tengah fikir..."):
             jawapan = ""
-            if tanya.lower().startswith("ajar aku"):
+            t_lower = tanya.lower().strip()
+            if t_lower in ["check kuota", "kuota", "check quota", "baki kuota", "kuota habis ke"]:
+                jawapan = check_kuota()
+            elif t_lower.startswith("ajar aku"):
                 try:
                     bahagian = tanya.split("|", 3)
                     kod_bos = bahagian[1].strip()
@@ -84,11 +115,12 @@ if tanya:
                     hasil = tanya_gemini(prompt)
                     if hasil:
                         jawapan = hasil
+                        st.session_state.guna_gemini += 1
                     else:
                         jawapan = "GEMINI ERROR: " + gemini_error
                 if jawapan == "TAK_TAHU":
                     if not API_KEY:
-                        jawapan = "GEMINI ERROR: API KEY KOSONG - Secrets takde key"
+                        jawapan = "GEMINI ERROR: API KEY KOSONG"
                     elif gemini_error:
                         jawapan = "GEMINI ERROR SETUP: " + gemini_error
                     else:
