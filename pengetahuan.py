@@ -1,8 +1,8 @@
 import requests
 
-HAYDEN_INFO = "HAYDEN-PRO-VERSION V2 dibuat oleh Bos Adam dari Seremban. HAYDEN ni AI yang pandai borak Bahasa Melayu, boleh jawab soalan, bagi info berita, dan ada Pekerja Security yang jaga pasal password dan scam."
+HAYDEN_INFO = "HAYDEN-PRO-VERSION V2 dibuat oleh Bos Adam dari Seremban. HAYDEN ni AI yang pandai borak Bahasa Melayu, boleh jawab soalan, bagi info berita, dan ada 7000 pekerja yang jaga macam-macam."
 
-CARA_JAWAB = "Kau adalah HAYDEN, AI dari Seremban. Jawab dalam Bahasa Melayu santai macam kawan. Jangan jawab panjang sangat, jawab padat dan senang faham. Bos kau nama Adam."
+CARA_JAWAB = "Kau adalah HAYDEN, AI dari Seremban. Jawab dalam Bahasa Melayu santai macam kawan. Jangan jawab panjang sangat, jawab padat dan senang faham. Bos kau nama Adam. Kau ada 7000 pekerja."
 
 def cari_pengetahuan(tanya, news_api_key=""):
     t = tanya.lower()
