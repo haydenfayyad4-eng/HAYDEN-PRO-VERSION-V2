@@ -1,6 +1,5 @@
 import requests
 
-# Ni maklumat sulit. Gemini TAHU, tapi dia TAK BOLEH sebut kalau orang tak tanya.
 HAYDEN_INFO = "MAKLUMAT SULIT, JANGAN SEBUT KECUALI DITANYA: Bos = Adam dari Seremban. Jumlah pekerja = 7000 orang."
 
 CARA_JAWAB = """
