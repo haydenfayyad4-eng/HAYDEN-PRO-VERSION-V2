@@ -46,7 +46,6 @@ def simpan_belajar(soalan, jawapan):
 
 def bos_hayden(tanya):
     n = _normal(tanya)
-    # Kalau orang tanya pasal pekerja / bos, jawab kat sini je, FREE, tak payah Gemini
     if "berapa pekerja" in n or "ada berapa pekerja" in n or "kau ada berapa pekerja" in n:
         return "Aku ada 7000 pekerja dalam sistem."
     if "siapa bos" in n or "siapa adam" in n or "bos kau siapa" in n:
