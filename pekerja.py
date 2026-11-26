@@ -3,7 +3,6 @@ import os
 
 FILE_BELAJAR = "belajar.json"
 
-# --- SIMPAN APA YANG BOS AJAR ---
 def simpan_belajar(soalan, jawapan):
     data = {}
     if os.path.exists(FILE_BELAJAR):
@@ -25,30 +24,32 @@ def load_belajar():
             return {}
     return {}
 
-# --- PEKERJA SECURITY / HACKER BAIK ---
 def pekerja_security(tanya):
     t = tanya.lower()
-
     if "password" in t or "kata laluan" in t:
-        return """🔒 **PEKERJA SECURITY - Password Kuat**
-
-Bos, ni cara buat password yang hacker susah nak pecah:
-
-1. Panjang 12 huruf ke atas, jangan 123456 atau tarikh lahir
-2. Campur Huruf Besar + Huruf Kecil + Nombor + Simbol. Contoh: `Seremban#2026!Adam`
-3. Jangan guna password sama untuk semua akaun. Kalau satu bocor, semua bocor.
-4. On kan 2FA / pengesahan 2 langkah kat Google, Instagram, WhatsApp.
-5. Jangan share password kat sesiapa, walaupun dia cakap dia dari support.
-
-Nak aku check cara buat password untuk akaun apa? Cakap je: Instagram / Google / WhatsApp"""
-
+        return "PEKERJA SECURITY - Password Kuat: Buat password 12 huruf ke atas, campur huruf besar, huruf kecil, nombor dan simbol. Contoh: Seremban2026Adam. Jangan guna password sama untuk semua akaun. On kan 2FA kat Google, Instagram dan WhatsApp."
     if "phishing" in t or "scam" in t or "link tipu" in t or "kena hack" in t or "kena scam" in t:
-        return """🛡️ **PEKERJA SECURITY - Jangan Kena Scam**
+        return "PEKERJA SECURITY - Jangan Kena Scam: Jangan klik link dari nombor tak kenal. Jangan bagi nombor OTP 6 digit kat sesiapa. Jangan login bank guna WiFi free kat kedai. Kalau dah terklik, cepat tukar password dan on 2FA."
+    if "ethical hacker" in t or "hacker baik" in t or "jadi hacker" in t or "belajar hack" in t:
+        return "PEKERJA SECURITY - Nak Jadi Ethical Hacker: Belajar asas komputer, Linux dan Python. Belajar kat tempat legal macam TryHackMe dan HackTheBox. Jangan test hack akaun orang tanpa izin. Bila dah pandai, company akan bayar kau untuk cari lubang security diorang."
+    if "bocor" in t or "leak" in t:
+        return "PEKERJA SECURITY - Check Akaun Bocor: Pergi kat Google, taip have i been pwned, masukkan email kau. Kalau merah, maknanya email pernah bocor. Terus tukar password email tu."
+    return "TAK_TAHU"
 
-Hacker jahat selalu guna 3 cara ni Bos:
-
-1. **Link Tipu / Phishing:** Dia hantar link cakap kau menang hadiah / akaun kena block. Bila kau klik & login, password kau terus dia dapat. Cara elak: Jangan klik link dari nombor tak kenal. Taip sendiri kat Google.
-2. **OTP:** Dia akan cakap dia dari bank / Shopee, mintak nombor OTP 6 digit tu. JANGAN BAGI. OTP tu kunci akaun kau.
-3. **WiFi Free:** Jangan login bank kat WiFi kedai mamak / mall yang free. Orang boleh curi data kau.
-
-Kalau dah terklik link tipu, cepat-ce
+def bos_hayden(tanya):
+    t = tanya.lower().strip()
+    belajar = load_belajar()
+    if t in belajar:
+        return belajar[t]
+    if t in ["hi", "hello", "assalamualaikum", "salam", "assalamualaikum hayden"]:
+        return "Waalaikumsalam Bos Adam. HAYDEN dah ready. Ada Pekerja Security baru, kalau nak belajar jadi hacker baik, tanya je aku."
+    if "siapa bos" in t or "siapa nama bos" in t or "siapa tuan kau" in t:
+        return "Bos aku Adam dari Seremban. Bos paling power."
+    if "siapa kau" in t or "nama kau" in t:
+        return "Aku HAYDEN-PRO-VERSION V2. Aku ada pekerja Security yang jaga akaun Bos dari kena hack."
+    if "apa khabar" in t:
+        return "Aku sihat Bos, tengah jaga security akaun Bos ni. Bos macam mana?"
+    jawapan_security = pekerja_security(tanya)
+    if jawapan_security != "TAK_TAHU":
+        return jawapan_security
+    return "TAK_TAHU"
