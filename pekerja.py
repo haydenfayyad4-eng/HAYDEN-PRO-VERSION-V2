@@ -3,8 +3,8 @@ import os
 import re
 
 FAIL = "belajar.json"
+JUMLAH_PEKERJA = 7000
 
-# Soalan mudah ni jawab FREE, tak pakai API langsung. Kau tambah je kat sini.
 JAWAPAN_TETAP = {
     "hi": "Hi, ada apa?",
     "hello": "Hello, ada apa?",
@@ -46,6 +46,13 @@ def simpan_belajar(soalan, jawapan):
 
 def bos_hayden(tanya):
     n = _normal(tanya)
+    # Kalau orang tanya pasal pekerja / bos, jawab kat sini je, FREE, tak payah Gemini
+    if "berapa pekerja" in n or "ada berapa pekerja" in n or "kau ada berapa pekerja" in n:
+        return "Aku ada 7000 pekerja dalam sistem."
+    if "siapa bos" in n or "siapa adam" in n or "bos kau siapa" in n:
+        return "Bos aku Adam dari Seremban."
+    if "senaraikan" in n and "pekerja" in n:
+        return "7000 pekerja tu banyak sangat, tak boleh senaraikan semua kat sini, nanti hang. Kau nak tugas bahagian mana? Cakap je bahagian apa, aku senaraikan yang tu je."
     if n in JAWAPAN_TETAP:
         return JAWAPAN_TETAP[n]
     data = _baca()
@@ -55,5 +62,3 @@ def bos_hayden(tanya):
         if k in n or n in k:
             return v
     return "TAK_TAHU"
-
-JUMLAH_PEKERJA = 7000
