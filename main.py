@@ -19,13 +19,15 @@ except:
 
 # --- GEMINI SETUP ---
 model = None
+gemini_error = ""
 if API_KEY:
     try:
         import google.generativeai as genai
         genai.configure(api_key=API_KEY)
         model = genai.GenerativeModel("gemini-1.5-flash")
-    except:
+    except Exception as e:
         model = None
+        gemini_error = str(e)
 
 # --- CHAT HISTORY ---
 if "chat" not in st.session_state:
@@ -72,12 +74,17 @@ if tanya:
                         prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + "\nSoalan: " + tanya
                         res = model.generate_content(prompt)
                         jawapan = res.text.strip()
-                    except:
-                        jawapan = "TAK_TAHU"
+                    except Exception as e:
+                        jawapan = "GEMINI ERROR: " + str(e)
 
                 # LAPIS 4: TAK TAHU
                 if jawapan == "TAK_TAHU":
-                    jawapan = "Aku tak tahu lagi yang ni, Bos. Ajar aku? Taip: ajar aku | soalan | jawapan"
+                    if not API_KEY:
+                        jawapan = "GEMINI ERROR: API KEY KOSONG - Secrets takde key"
+                    elif gemini_error:
+                        jawapan = "GEMINI ERROR SETUP: " + gemini_error
+                    else:
+                        jawapan = "Aku tak tahu lagi yang ni, Bos. Ajar aku? Taip: ajar aku | soalan | jawapan"
 
             st.write(jawapan)
             st.session_state.chat.append({"role": "assistant", "text": jawapan})
