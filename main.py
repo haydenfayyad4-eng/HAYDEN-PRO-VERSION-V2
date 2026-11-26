@@ -36,7 +36,8 @@ if API_KEY:
             for m in client.models.list():
                 nama = m.name.replace("models/", "")
                 MODEL_LIST_DAPAT.append(nama)
-            UTAMA = ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.1-flash", "gemini-2.0-flash-lite"]
+            # Lite dulu sebab 500 kali sehari, Flash biasa 20 kali je
+            UTAMA = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.1-flash", "gemini-2.0-flash-lite"]
             for u in UTAMA:
                 if u in MODEL_LIST_DAPAT:
                     MODEL_CUBA.append(u)
@@ -133,6 +134,8 @@ if tanya:
                     hasil = tanya_gemini(prompt)
                     if hasil:
                         jawapan = hasil
+                        # Ni yang buat dia belajar sendiri, esok tak payah pakai kuota lagi
+                        simpan_belajar(tanya, hasil)
                         st.session_state.guna_gemini += 1
                     else:
                         jawapan = "GEMINI ERROR: " + gemini_error
