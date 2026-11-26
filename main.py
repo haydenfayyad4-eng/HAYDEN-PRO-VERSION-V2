@@ -5,7 +5,6 @@ from pengetahuan import cari_pengetahuan, HAYDEN_INFO, CARA_JAWAB
 
 st.set_page_config(page_title="HAYDEN-PRO-VERSION V2", page_icon="🤖")
 
-# --- SOROK MANAGE APP JE, SHARE BIAR ADA ---
 st.markdown("""
 <style>
 .stAppDeployButton {display: none !important; visibility: hidden !important;}
@@ -24,25 +23,22 @@ try:
 except:
     NEWS_API_KEY = ""
 
-model = None
+client = None
 gemini_error = ""
-# 1.5 DAH MATI, KITA PAKAI YANG BARU JE
-MODEL_LIST = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite"]
+MODEL_LIST = ["gemini-2.5-flash", "gemini-2.0-flash"]
 if API_KEY:
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=API_KEY)
-        model = genai
+        from google import genai
+        client = genai.Client(api_key=API_KEY)
     except Exception as e:
-        model = None
+        client = None
         gemini_error = str(e)
 
 def tanya_gemini(prompt):
     global gemini_error
     for nama_model in MODEL_LIST:
         try:
-            m = model.GenerativeModel(nama_model)
-            res = m.generate_content(prompt)
+            res = client.models.generate_content(model=nama_model, contents=prompt)
             return res.text.strip()
         except Exception as e:
             gemini_error = str(e)
@@ -72,9 +68,9 @@ if tanya:
                     jawapan_baru = bahagian[3].strip()
                     if kod_bos == "ADAM-BOS":
                         simpan_belajar(soalan_baru, jawapan_baru)
-                        jawapan = "Ok Bos, dah simpan. Nanti kalau orang tanya '" + soalan_baru + "', aku jawab '" + jawapan_baru + "'"
+                        jawapan = "Ok Bos, dah simpan."
                     else:
-                        jawapan = "Eh, ajar aku ni untuk Bos Adam je. Member tak boleh ajar HAYDEN."
+                        jawapan = "Eh, ajar aku ni untuk Bos Adam je."
                 except:
                     jawapan = "Format Bos sahaja: ajar aku | ADAM-BOS | soalan | jawapan"
             else:
@@ -83,7 +79,7 @@ if tanya:
                     cari = cari_pengetahuan(tanya, NEWS_API_KEY)
                     if cari:
                         jawapan = cari
-                if jawapan == "TAK_TAHU" and model:
+                if jawapan == "TAK_TAHU" and client:
                     prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + "\nSoalan: " + tanya
                     hasil = tanya_gemini(prompt)
                     if hasil:
