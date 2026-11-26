@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import socket
 from pekerja import bos_hayden, simpan_belajar, JUMLAH_PEKERJA
 from pengetahuan import cari_pengetahuan, HAYDEN_INFO, CARA_JAWAB
 
@@ -13,6 +14,15 @@ st.markdown("""
 
 st.title("🤖 HAYDEN-PRO-VERSION V2")
 st.caption("Online • Tanya HAYDEN apa-apa")
+
+def ada_internet():
+    try:
+        socket.create_connection(("8.8.8.8", 53), timeout=2)
+        return True
+    except:
+        return False
+
+OFFLINE = not ada_internet()
 
 try:
     API_KEY = st.secrets["GEMINI_API_KEY"]
@@ -28,7 +38,7 @@ gemini_error = ""
 MODEL_LIST_DAPAT = []
 MODEL_CUBA = []
 
-if API_KEY:
+if API_KEY and not OFFLINE:
     try:
         from google import genai
         client = genai.Client(api_key=API_KEY)
@@ -51,6 +61,8 @@ if API_KEY:
 
 def tanya_gemini(prompt):
     global gemini_error
+    if OFFLINE or not client:
+        return None
     for nama_model in MODEL_CUBA:
         try:
             res = client.models.generate_content(model=nama_model, contents=prompt)
@@ -63,6 +75,8 @@ def tanya_gemini(prompt):
     return None
 
 def check_kuota():
+    if OFFLINE:
+        return "📴 OFFLINE SEKARANG. Kuota tak boleh check, kena ada internet."
     if not client:
         return "❌ API KEY TAKDE / ROSAK"
     if not MODEL_CUBA:
@@ -83,6 +97,10 @@ if "model_jaya" not in st.session_state:
     st.session_state.model_jaya = "-"
 
 with st.sidebar:
+    if OFFLINE:
+        st.warning("📴 MODE OFFLINE - Jawab soalan yang dah belajar je")
+    else:
+        st.success("🌐 ONLINE")
     st.write("📊 **KUOTA HAYDEN**")
     st.write(f"Model berjaya tadi: {st.session_state.model_jaya}")
     st.write(f"Dah guna Gemini: {st.session_state.guna_gemini} kali")
@@ -117,18 +135,22 @@ if tanya:
                     jawapan_baru = bahagian[3].strip()
                     if kod_bos == "ADAM-BOS":
                         simpan_belajar(soalan_baru, jawapan_baru)
-                        jawapan = "Ok, dah simpan."
+                        jawapan = "Ok, dah simpan. Lepas ni boleh jawab offline dah."
                     else:
                         jawapan = "Eh, kod salah."
                 except:
                     jawapan = "Format: ajar aku | ADAM-BOS | soalan | jawapan"
             else:
+                # 1. Cuba jawab dari yang dah belajar dulu - NI YANG BOLEH OFFLINE
                 jawapan = bos_hayden(tanya)
+                # 2. Kalau tak tahu dan offline, jangan panggil Gemini
+                if jawapan == "TAK_TAHU" and OFFLINE:
+                    jawapan = "Aku offline sekarang, soalan ni aku tak belajar lagi. Nanti bila ada internet, ajar aku soalan ni, lepas tu aku boleh jawab offline."
                 if jawapan == "TAK_TAHU":
                     cari = cari_pengetahuan(tanya, NEWS_API_KEY)
                     if cari:
                         jawapan = cari
-                if jawapan == "TAK_TAHU" and client:
+                if jawapan == "TAK_TAHU" and client and not OFFLINE:
                     prompt = CARA_JAWAB + "\nInfo: " + HAYDEN_INFO + "\nSoalan: " + tanya
                     hasil = tanya_gemini(prompt)
                     if hasil:
@@ -138,7 +160,9 @@ if tanya:
                     else:
                         jawapan = "GEMINI ERROR: " + gemini_error
                 if jawapan == "TAK_TAHU":
-                    if not API_KEY:
+                    if OFFLINE:
+                        jawapan = "Aku offline sekarang, soalan ni aku tak belajar lagi."
+                    elif not API_KEY:
                         jawapan = "GEMINI ERROR: API KEY KOSONG"
                     elif gemini_error:
                         jawapan = "GEMINI ERROR SETUP: " + gemini_error
