@@ -5,9 +5,6 @@ import hashlib
 FILE_BELAJAR = "belajar.json"
 JUMLAH_PEKERJA = 7000
 
-# --- 7000 PEKERJA DIJANA OTOMATIK ---
-# Kita tak taip 7000 satu-satu, kita generate.
-# Pekerja 1-1000: Security, 1001-2000: Berita, 2001-3000: Cuaca, 3001-4000: Sains, 4001-5000: Sukan, 5001-6000: Agama, 6001-7000: Lawak / Borak
 def dapat_kategori_pekerja(nombor):
     if nombor <= 1000:
         return "Security"
@@ -25,7 +22,6 @@ def dapat_kategori_pekerja(nombor):
         return "Borak"
 
 def pilih_pekerja(tanya):
-    # Pilih pekerja ikut soalan, supaya soalan sama pergi kat pekerja sama
     h = int(hashlib.md5(tanya.lower().encode()).hexdigest(), 16)
     nombor = (h % 7000) + 1
     return nombor, dapat_kategori_pekerja(nombor)
