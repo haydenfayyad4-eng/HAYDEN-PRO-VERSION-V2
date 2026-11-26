@@ -4,6 +4,21 @@ from pekerja import bos_hayden, simpan_belajar
 from pengetahuan import cari_pengetahuan, HAYDEN_INFO, CARA_JAWAB
 
 st.set_page_config(page_title="HAYDEN-PRO-VERSION V2", page_icon="🤖")
+
+# --- SOROK MANAGE APP / SHARE / MENU UNTUK SEMUA ORANG ---
+# Bos nak manage, pergi kat share.streamlit.io, jangan dalam app ni
+st.markdown("""
+<style>
+[data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
+[data-testid="stDecoration"] {visibility: hidden !important; display: none !important;}
+[data-testid="stStatusWidget"] {visibility: hidden !important; display: none !important;}
+#MainMenu {visibility: hidden !important; display: none !important;}
+footer {visibility: hidden !important; display: none !important;}
+header {visibility: hidden !important; display: none !important;}
+.stAppDeployButton {display: none !important;}
+</style>
+""", unsafe_allow_html=True)
+
 st.title("🤖 HAYDEN-PRO-VERSION V2")
 st.caption("Bos: Adam dari Seremban")
 
@@ -55,15 +70,21 @@ if tanya:
     with st.chat_message("assistant"):
         with st.spinner("HAYDEN tengah fikir..."):
             jawapan = ""
+            # AJAR AKU - KUNCI UNTUK BOS JE. KOD: ADAM-BOS
+            # Cara Bos ajar: ajar aku | ADAM-BOS | soalan | jawapan
             if tanya.lower().startswith("ajar aku"):
                 try:
-                    bahagian = tanya.split("|", 2)
-                    soalan_baru = bahagian[1].strip()
-                    jawapan_baru = bahagian[2].strip()
-                    simpan_belajar(soalan_baru, jawapan_baru)
-                    jawapan = "Ok Bos, dah simpan. Nanti kalau orang tanya '" + soalan_baru + "', aku jawab '" + jawapan_baru + "'"
+                    bahagian = tanya.split("|", 3)
+                    kod_bos = bahagian[1].strip()
+                    soalan_baru = bahagian[2].strip()
+                    jawapan_baru = bahagian[3].strip()
+                    if kod_bos == "ADAM-BOS":
+                        simpan_belajar(soalan_baru, jawapan_baru)
+                        jawapan = "Ok Bos, dah simpan. Nanti kalau orang tanya '" + soalan_baru + "', aku jawab '" + jawapan_baru + "'"
+                    else:
+                        jawapan = "Eh, ajar aku ni untuk Bos Adam je. Member tak boleh ajar HAYDEN."
                 except:
-                    jawapan = "Format salah Bos. Taip macam ni: ajar aku | apa itu kucing | kucing tu haiwan comel"
+                    jawapan = "Format Bos sahaja: ajar aku | ADAM-BOS | soalan | jawapan"
             else:
                 jawapan = bos_hayden(tanya)
                 if jawapan == "TAK_TAHU":
@@ -83,6 +104,6 @@ if tanya:
                     elif gemini_error:
                         jawapan = "GEMINI ERROR SETUP: " + gemini_error
                     else:
-                        jawapan = "Aku tak tahu lagi yang ni, Bos. Ajar aku? Taip: ajar aku | soalan | jawapan"
+                        jawapan = "Aku tak tahu lagi yang ni, Bos."
             st.write(jawapan)
             st.session_state.chat.append({"role": "assistant", "text": jawapan})
