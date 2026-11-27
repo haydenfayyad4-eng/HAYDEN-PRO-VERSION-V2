@@ -2,8 +2,8 @@ import streamlit as st
 from pekerja import bos_hayden
 
 st.set_page_config(page_title="HAYDEN", page_icon="🤖")
-st.title("🤖 HAYDEN-PRO-VERSION")
-st.caption("Bos: Adam | 9000 Pekerja")
+st.title("🤖 HAYDEN")
+st.caption("Tanya je, pendek ke panjang ke, aku ikut cakap kau")
 
 if "chat" not in st.session_state:
     st.session_state.chat = []
