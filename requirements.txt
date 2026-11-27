@@ -1,3 +1,6 @@
 streamlit
-google-genai
 requests
+fastapi
+uvicorn
+google-generativeai
+pydantic
