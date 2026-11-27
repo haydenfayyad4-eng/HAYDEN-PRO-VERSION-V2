@@ -11,7 +11,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"sender": "BOT ASSISTANT", "role": "bot", "text": "Selamat datang ke HAYDEN HQ! Saya Bot Assistant. Saya akan jaga Hayden 24 jam. Kalau Hayden error, saya akan bagitau Boss & Member kat sini.", "time": "Sekarang"},
+        {"sender": "BOT ASSISTANT", "role": "bot", "text": "Selamat datang ke HAYDEN HQ! Saya Bot Assistant. Saya akan jaga Hayden 24 jam. Kalau Hayden error, saya akan bagitau Boss & Acap kat sini.", "time": "Sekarang"},
         {"sender": "HAYDEN", "role": "hayden", "text": "Hai Boss! Hayden dah online. Apa-apa suruh je saya.", "time": "Sekarang"},
     ]
 if "hayden_status" not in st.session_state:
@@ -25,7 +25,7 @@ if not st.session_state.user:
     st.title("👑 HAYDEN HQ - Login")
     st.write("Pilih siapa kau:")
     nama = st.text_input("Nama kau:")
-    peranan = st.selectbox("Kau siapa?", ["BOSS", "MEMBER - Assistant Manusia", "BOT ASSISTANT", "HAYDEN"])
+    peranan = st.selectbox("Kau siapa?", ["BOSS", "ACAP - Assistant Manusia", "BOT ASSISTANT", "HAYDEN"])
     password = st.text_input("Password Group (buat sama untuk semua):", type="password", value="hayden123")
 
     if st.button("MASUK GROUP"):
@@ -44,7 +44,7 @@ if st.sidebar.button("Log Out"):
 
 # --- MAIN CHAT ---
 st.title("💬 HAYDEN HQ - Group Chat")
-st.caption("Boss + Member Manusia + Bot Assistant + Hayden - Semua sembang kat sini")
+st.caption("Boss + Acap + Bot Assistant + Hayden - Semua sembang kat sini")
 
 # Papar mesej
 for m in st.session_state.messages:
@@ -69,7 +69,7 @@ if hantar and teks:
     # Tentukan role
     if "BOSS" in user["peranan"]:
         role = "boss"
-    elif "MEMBER" in user["peranan"]:
+    elif "ACAP" in user["peranan"]:
         role = "member"
     elif "BOT" in user["peranan"]:
         role = "bot"
@@ -90,5 +90,5 @@ if hantar and teks:
     
     # --- HAYDEN AUTO-REPLY KALAU BOSS SURUH CODING ---
     elif "coding" in teks.lower() or "buat" in teks.lower() or "tolong" in teks.lower():
-        st.session_state.messages.append({"sender": "HAYDEN", "role": "hayden", "text": f"Okay Boss {user['nama']}, saya faham. Saya dah buatkan coding untuk '{teks}'. Member, tolong checkkan sekali boleh? Kalau okay, Boss boleh approve.", "time": masa})
+        st.session_state.messages.append({"sender": "HAYDEN", "role": "hayden", "text": f"Okay Boss {user['nama']}, saya faham. Saya dah buatkan coding untuk '{teks}'. Acap, tolong checkkan sekali boleh? Kalau okay, Boss boleh approve.", "time": masa})
         st.session_state.messages.append({"sender": "BOT ASSISTANT", "role": "bot", "text": "Saya dah check coding Hayden tu, n
