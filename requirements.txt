@@ -4,3 +4,4 @@ fastapi
 uvicorn
 google-generativeai
 pydantic
+gunicorn 
